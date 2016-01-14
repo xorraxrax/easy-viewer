@@ -31,6 +31,7 @@ def main():
         try:
             contents = [urwid.Text(x) for x in file_contents(user_data).split('\n')]
             viewer = urwid.AttrWrap(urwid.ListBox(urwid.SimpleListWalker(contents)), 'viwer')
+            viewer = urwid.LineBox(viewer, title=user_data)
             frame.body = urwid.Columns([ (choice_width,choice_list), ('weight',1,viewer) ], focus_column=1,dividechars=1)
             frame.footer = urwid.Text('loaded {}'.format(user_data))
         except:
@@ -41,8 +42,9 @@ def main():
     choice_list = urwid.ListBox(urwid.SimpleListWalker(choices))
     choice_width = min(max(len(x) for x in choice_text)+4, 24)
 
-    contents = [urwid.Text(x) for x in file_contents(choices[3].label).split('\n')]
+    contents = [urwid.Text(x) for x in file_contents(choice_text[0]).split('\n')]
     viewer = urwid.AttrWrap(urwid.ListBox(urwid.SimpleListWalker(contents)), 'viwer')
+    viewer = urwid.LineBox(viewer, title=choice_text[0])
 
     header = urwid.AttrWrap(urwid.Text('File Viewer'), 'header')
     panes = urwid.Columns([ (choice_width,choice_list), ('weight',1,viewer) ], focus_column=1,dividechars=1)

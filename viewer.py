@@ -37,19 +37,22 @@ def main():
         except:
             frame.footer = urwid.Text('Could not read {}'.format(user_data))
     
-    choice_text = os.listdir('.')
-    choices = [urwid.AttrWrap(urwid.Button(x, on_press=button_press, user_data=x), 'focus') for x in choice_text]
-    choice_list = urwid.ListBox(urwid.SimpleListWalker(choices))
-    choice_width = min(max(len(x) for x in choice_text)+4, 24)
-    
-    contents = [urwid.Text(x) for x in file_contents(choice_text[0]).split('\n')]
-    viewer = urwid.AttrWrap(urwid.ListBox(urwid.SimpleListWalker(contents)), 'viwer')
-    viewer = urwid.LineBox(viewer, title=choice_text[0])
+    choice_text = [x for x in os.listdir('.') if os.path.isfile(x)]
+    if not choice_text:
+        quit()
+    else:
+        choices = [urwid.AttrWrap(urwid.Button(x, on_press=button_press, user_data=x), 'focus') for x in choice_text]
+        choice_list = urwid.ListBox(urwid.SimpleListWalker(choices))
+        choice_width = min(max(len(x) for x in choice_text)+4, 24)
 
-    header = urwid.AttrWrap(urwid.Text('File Viewer'), 'header')
-    panes = urwid.Columns([ (choice_width,choice_list), ('weight',1,viewer) ], focus_column=1,dividechars=1)
-    footer = urwid.AttrWrap(urwid.Text(''), 'footer')
-    frame = urwid.Frame(panes, header=header, footer=footer)
+        contents = [urwid.Text(x) for x in file_contents(choice_text[0]).split('\n')]
+        viewer = urwid.AttrWrap(urwid.ListBox(urwid.SimpleListWalker(contents)), 'viwer')
+        viewer = urwid.LineBox(viewer, title=choice_text[0])
+
+        header = urwid.AttrWrap(urwid.Text('File Viewer'), 'header')
+        panes = urwid.Columns([ (choice_width,choice_list), ('weight',1,viewer) ], focus_column=1,dividechars=1)
+        footer = urwid.AttrWrap(urwid.Text(''), 'footer')
+        frame = urwid.Frame(panes, header=header, footer=footer)
     
     
     loop = urwid.MainLoop(frame, palette=palette, unhandled_input=handle_key)

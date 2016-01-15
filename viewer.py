@@ -14,13 +14,6 @@ def file_contents(filepath):
     contents = f.read()
     f.close()
     return contents
-
-def hum_rd(num):
-    for unit in ['','K','M']:
-        if abs(num) < 1024.0:
-            return "%3.1f%s%s" % (num, unit, 'B')
-        num /= 1024.0
-    return "%.1f%s%s" % (num, 'GB')
     
 def main():
     palette = [
@@ -49,9 +42,6 @@ def main():
     choice_list = urwid.ListBox(urwid.SimpleListWalker(choices))
     choice_width = min(max(len(x) for x in choice_text)+4, 24)
     
-    file_size = [(hum_rd(os.stat(x).st_size)) for x in choice_text]
-    print(choice_text, file_size)
-
     contents = [urwid.Text(x) for x in file_contents(choice_text[0]).split('\n')]
     viewer = urwid.AttrWrap(urwid.ListBox(urwid.SimpleListWalker(contents)), 'viwer')
     viewer = urwid.LineBox(viewer, title=choice_text[0])

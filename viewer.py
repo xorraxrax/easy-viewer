@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import argparse
 import os
 import urwid
 
@@ -61,4 +62,11 @@ def main():
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument('-t', '--title', action='append', nargs=2, help='Specify a title and file path. Use multiple times to include more than one title,file pair')
+    group.add_argument('-d', '--directory', help='Specify a directory whose files to view')
+    group.add_argument('-f', '--files', nargs='+', help='Specify a list of files to view')
+    args = parser.parse_args()
+    print args
     main()

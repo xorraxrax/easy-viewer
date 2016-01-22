@@ -16,11 +16,7 @@ def file_contents(filepath):
     f.close()
     return contents
 
-def help_out():
-    print('usage: viewer.py /path/to/files \n      -h help menu')
-    
 def main():
-
     palette = [
         (None, 'light gray', 'black'),
         ('viwer', 'black', 'light gray'),

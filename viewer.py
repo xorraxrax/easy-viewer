@@ -17,7 +17,10 @@ def file_contents(filepath):
     return contents
 
 def help_out():
-    print('usage: viewer.py /path/to/files \n      -h help menu')
+    print('viewer.py | A simple file viewer  \n'
+          'Usage: viewer.py /path/to/files \n'
+          '      -h help menu              \n'
+          '  --help Also a help menu       \n')
     
 def main():
 
@@ -32,7 +35,7 @@ def main():
     ]
 
     try:
-        options = ('-h', '-help')
+        options = ('-h', '--help')
         for arg in sys.argv[1:]:
             if arg in options:
                 exit(help_out())

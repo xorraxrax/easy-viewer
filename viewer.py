@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import argparse
 import sys
 import os
 import urwid
@@ -15,12 +16,6 @@ def file_contents(filepath):
     contents = f.read()
     f.close()
     return contents
-
-def help_out():
-    print('viewer.py | A simple file viewer  \n'
-          'Usage: viewer.py /path/to/files \n'
-          '      -h help menu              \n'
-          '  --help Also a help menu       \n')
     
 def main():
 
@@ -34,41 +29,56 @@ def main():
         ('error', 'dark red', 'light gray')
     ]
 
-    try:
-        options = ('-h', '--help')
-        for arg in sys.argv[1:]:
-            if arg in options:
-                exit(help_out())
-    except ValueError:
-        print('Not a valid option, please try again')
 
-    def button_press(button, user_data=sys.argv[1]):
-        frame.footer = urwid.Text('loading {}'.format(user_data))
+    def button_press(button, user_data=None):
+        index = choice_path.index(user_data)
+        thetitle = choice_text[index]
+        frame.footer = urwid.Text('loading {}'.format(thetitle))
+
         try:
             contents = [urwid.Text(x) for x in file_contents(user_data).split('\n')]
             viewer = urwid.AttrWrap(urwid.ListBox(urwid.SimpleListWalker(contents)), 'viwer')
-            viewer = urwid.LineBox(viewer, title=user_data)
+            viewer = urwid.LineBox(viewer, title=thetitle)
             frame.body = urwid.Columns([ (choice_width,choice_list), ('weight',1,viewer) ], focus_column=1,dividechars=1)
-            frame.footer = urwid.Text('loaded {}'.format(user_data))
+            frame.footer = urwid.Text('loaded {}'.format(thetitle))
         except:
-            frame.footer = urwid.Text('Could not read {}'.format(user_data))
-    
-    choice_text = [x for x in os.listdir('.') if os.path.isfile(x)]
-    if not choice_text:
-        quit()
+            frame.footer = urwid.Text('Could not read {}'.format(thetitle))
+   
+    choice_text = []
+    choice_path = [] 
+    if args.directory == None and args.files == None and args.title == None:
+        # No arguments supplied, use current directory.
+        choice_text = [x for x in os.listdir('.') if os.path.isfile(x)]
+        choice_path = [x for x in os.listdir('.') if os.path.isfile(x)]
+    elif args.directory:
+        dir = args.directory
+        files = os.listdir(dir)
+        choice_text = [x for x in files if os.path.isfile(os.path.join(dir, x))]
+        choice_path = [os.path.join(dir, x) for x in files if os.path.isfile(os.path.join(dir, x))]
+    elif args.files:
+        choice_text = [os.path.basename(x) for x in args.files if os.path.isfile(x)]
+        choice_path = [x for x in args.files if os.path.isfile(x)]
+    elif args.title:
+        choice_text = [x[0] for x in args.title]
+        choice_path = [x[1] for x in args.title]
     else:
-        choices = [urwid.AttrWrap(urwid.Button(x, on_press=button_press, user_data=x), 'focus') for x in choice_text]
-        choice_list = urwid.ListBox(urwid.SimpleListWalker(choices))
-        choice_width = min(max(len(x) for x in choice_text)+4, 24)
+        quit()
+    
+    choices = []
+    for index in range(len(choice_text)):
+        choice = urwid.Button(choice_text[index], on_press=button_press, user_data=choice_path[index])
+        choices.append(choice)
+    choice_list = urwid.ListBox(urwid.SimpleListWalker(choices))
+    choice_width = min(max(len(x) for x in choice_text)+4, 24)
 
-        contents = [urwid.Text(x) for x in file_contents(choice_text[0]).split('\n')]
-        viewer = urwid.AttrWrap(urwid.ListBox(urwid.SimpleListWalker(contents)), 'viwer')
-        viewer = urwid.LineBox(viewer, title=choice_text[0])
+    contents = [urwid.Text(x) for x in file_contents(choice_path[0]).split('\n')]
+    viewer = urwid.AttrWrap(urwid.ListBox(urwid.SimpleListWalker(contents)), 'viwer')
+    viewer = urwid.LineBox(viewer, title=choice_text[0])
 
-        header = urwid.AttrWrap(urwid.Text('File Viewer'), 'header')
-        panes = urwid.Columns([ (choice_width,choice_list), ('weight',1,viewer) ], focus_column=1,dividechars=1)
-        footer = urwid.AttrWrap(urwid.Text(''), 'footer')
-        frame = urwid.Frame(panes, header=header, footer=footer)
+    header = urwid.AttrWrap(urwid.Text('File Viewer'), 'header')
+    panes = urwid.Columns([ (choice_width,choice_list), ('weight',1,viewer) ], focus_column=1,dividechars=1)
+    footer = urwid.AttrWrap(urwid.Text(''), 'footer')
+    frame = urwid.Frame(panes, header=header, footer=footer)
     
     
     loop = urwid.MainLoop(frame, palette=palette, unhandled_input=handle_key)
@@ -77,4 +87,11 @@ def main():
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument('-t', '--title', action='append', nargs=2, help='Specify a title and file path. Use multiple times to include more than one title,file pair')
+    group.add_argument('-d', '--directory', help='Specify a directory whose files to view')
+    group.add_argument('-f', '--files', nargs='+', help='Specify a list of files to view')
+    args = parser.parse_args()
+    print(args)
     main()

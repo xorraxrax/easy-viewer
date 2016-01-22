@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import argparse
+import sys
 import os
 import urwid
 
@@ -15,8 +16,12 @@ def file_contents(filepath):
     contents = f.read()
     f.close()
     return contents
+
+def help_out():
+    print('usage: viewer.py /path/to/files \n      -h help menu')
     
 def main():
+
     palette = [
         (None, 'light gray', 'black'),
         ('viwer', 'black', 'light gray'),
@@ -60,7 +65,6 @@ def main():
     else:
         quit()
     
-#$    choices = [urwid.AttrWrap(urwid.Button(x, on_press=button_press, user_data=x), 'focus') for x in choice_text]
     choices = []
     for index in range(len(choice_text)):
         choice = urwid.Button(choice_text[index], on_press=button_press, user_data=choice_path[index])

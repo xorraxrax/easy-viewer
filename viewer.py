@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import sys
 import os
 import urwid
 
@@ -14,8 +15,12 @@ def file_contents(filepath):
     contents = f.read()
     f.close()
     return contents
+
+def help_out():
+    print('usage: viewer.py /path/to/files \n      -h help menu')
     
 def main():
+
     palette = [
         (None, 'light gray', 'black'),
         ('viwer', 'black', 'light gray'),
@@ -26,7 +31,15 @@ def main():
         ('error', 'dark red', 'light gray')
     ]
 
-    def button_press(button, user_data=None):
+    try:
+        options = ('-h', '-help')
+        for arg in sys.argv[1:]:
+            if arg in options:
+                exit(help_out())
+    except ValueError:
+        print('Not a valid option, please try again')
+
+    def button_press(button, user_data=sys.argv[1]):
         frame.footer = urwid.Text('loading {}'.format(user_data))
         try:
             contents = [urwid.Text(x) for x in file_contents(user_data).split('\n')]

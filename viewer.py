@@ -15,9 +15,8 @@ def file_contents(filepath):
     contents = f.read()
     f.close()
     return contents
-    
-def main():
 
+def main():
     palette = [
         (None, 'light gray', 'black'),
         ('viwer', 'black', 'light gray'),

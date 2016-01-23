@@ -3,6 +3,23 @@ import argparse
 import os
 import urwid
 
+
+class WheelableListBox(urwid.ListBox):
+    def __init__(self, body):
+        super(WheelableListBox, self).__init__(body)
+        self.default_keypress = urwid.ListBox.keypress
+    
+    def mouse_event(self, size, event, button, col, row, focus):
+        from urwid.util import is_mouse_press
+        if is_mouse_press(event):
+            if button == 5:
+                return super(WheelableListBox, self).keypress(size, 'down')
+            elif button == 4:
+                return super(WheelableListBox, self).keypress(size, 'up')
+
+        return super(WheelableListBox, self).mouse_event(size, event, button, col, row, focus)
+                
+
 def quit():
     raise urwid.ExitMainLoop()
 
@@ -33,7 +50,7 @@ def main():
         frame.footer = urwid.Text('loading {}'.format(thetitle))
         try:
             contents = [urwid.Text(x) for x in file_contents(user_data).split('\n')]
-            viewer = urwid.AttrWrap(urwid.ListBox(urwid.SimpleListWalker(contents)), 'viwer')
+            viewer = urwid.AttrWrap(WheelableListBox(urwid.SimpleListWalker(contents)), 'viwer')
             viewer = urwid.LineBox(viewer, title=thetitle)
             frame.body = urwid.Columns([ (choice_width,choice_list), ('weight',1,viewer) ], focus_column=1,dividechars=1)
             frame.footer = urwid.Text('loaded {}'.format(thetitle))
@@ -72,7 +89,7 @@ def main():
     choice_width = min(max(len(x) for x in choice_text)+4, 24)
 
     contents = [urwid.Text(x) for x in file_contents(choice_path[0]).split('\n')]
-    viewer = urwid.AttrWrap(urwid.ListBox(urwid.SimpleListWalker(contents)), 'viwer')
+    viewer = urwid.AttrWrap(WheelableListBox(urwid.SimpleListWalker(contents)), 'viwer')
     viewer = urwid.LineBox(viewer, title=choice_text[0])
 
     panes = urwid.Columns([ (choice_width, choice_list), ('weight',1,viewer) ], focus_column=1,dividechars=1)
@@ -93,5 +110,4 @@ if __name__ == '__main__':
     group.add_argument('-d', '--directory', help='Specify a directory whose files to view')
     group.add_argument('-f', '--files', nargs='+', help='Specify a list of files to view')
     args = parser.parse_args()
-    print args
     main()

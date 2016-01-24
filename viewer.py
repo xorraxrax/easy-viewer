@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 import argparse
 import os
+import sys
 import urwid
 
+PYTHON2=sys.version_info[0] == 2
 
 class WheelableListBox(urwid.ListBox):
     def __init__(self, body):
@@ -28,9 +30,12 @@ def handle_key(key):
         quit()
 
 def file_contents(filepath):
-    f = open(filepath)
-    contents = f.read()
-    f.close()
+    with open(filepath, 'rb') as f:
+        if not PYTHON2:
+            contents = f.read().decode(encoding='utf-8', errors='ignore')
+        else:
+            contents = unicode(f.read(), encoding='utf-8', errors='ignore')
+            
     return contents
 
 def main():
@@ -55,7 +60,8 @@ def main():
             frame.body = urwid.Columns([ (choice_width,choice_list), ('weight',1,viewer) ], focus_column=1,dividechars=1)
             frame.footer = urwid.Text('loaded {}'.format(thetitle))
         except:
-            frame.footer = urwid.Text('Could not read {}'.format(thetitle))
+            frame.footer = urwid.Text('Could not read {}: {}'.format(thetitle, sys.exc_info()[0]))
+
    
     choice_text = []
     choice_path = [] 
@@ -85,7 +91,7 @@ def main():
         choice = urwid.Button(choice_text[index], on_press=button_press, user_data=choice_path[index])
         choices.append(choice)
     header = urwid.AttrWrap(urwid.Text(args.banner), 'header')
-    choice_list = urwid.ListBox(urwid.SimpleListWalker([header] + choices))
+    choice_list = WheelableListBox(urwid.SimpleListWalker([header] + choices))
     choice_width = min(max(len(x) for x in choice_text)+4, 24)
 
     contents = [urwid.Text(x) for x in file_contents(choice_path[0]).split('\n')]

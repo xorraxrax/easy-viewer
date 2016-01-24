@@ -1,0 +1,5 @@
+0.0.3
+-----
+Added mouse wheel scrolling to both panes
+Added UTF-8 support
+Python 2/3 compatible. Tested with 2.7 and 3.4

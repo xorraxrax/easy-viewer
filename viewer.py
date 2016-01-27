@@ -43,16 +43,39 @@ class WheelableListBox(urwid.ListBox):
         return super(WheelableListBox, self).mouse_event(
             size, event, button, col, row, focus)
 
+class SearchBox(urwid.Edit):
+    """A box which allows user to hit enter and a function will be called"""
+    def __init__(self, callback, caption='search: '):
+        super(SearchBox, self).__init__(caption=caption)
+        self.callback = callback
+
+    def keypress(self, size, key):
+        if key == 'enter':
+            self.callback(self._edit_text)
+        else:
+            super(SearchBox, self).keypress(size, key) 
+
 
 def quit():
     """Terminate program"""
     raise urwid.ExitMainLoop()
 
 
+def search(one):
+    global frame
+    frame.set_focus('body')
+    frame.footer = urwid.Text('hello world: {}'.format(one))
+
+
 def handle_key(key):
+    global  frame
     """Handle key presses not handled by any widgets"""
     if key in ('q', 'Q', 'esc'):
         quit()
+    elif key == '/':
+        box = SearchBox(search, caption='regex: ')
+        frame.footer = urwid.AttrWrap(box, 'search')
+        frame.set_focus('footer')
 
 
 def file_contents(filepath):
@@ -67,6 +90,7 @@ def file_contents(filepath):
 
 
 def main():
+    global  header, viewer, panes, footer, frame
     palette = [
         (None, 'light gray', 'black'),
         ('viwer', 'black', 'light gray'),
@@ -74,12 +98,15 @@ def main():
         ('header', 'yellow', 'black', 'standout'),
         ('footer', 'light gray', 'black'),
         ('key', 'light cyan', 'black', 'underline'),
-        ('error', 'dark red', 'light gray')
+        ('error', 'dark red', 'light gray'),
+        ('good', 'dark green', 'black', 'standout'),
+        ('search', 'dark red', 'yellow')
     ]
 
     def button_press(button, user_data=None):
         """Action when another file is selected, display its content in
         viewer"""
+        global  viewer, panes, footer, frame
         index = choice_path.index(user_data)
         thetitle = choice_text[index]
         frame.footer = urwid.Text('loading {}'.format(thetitle))
@@ -92,11 +119,11 @@ def main():
             frame.body = urwid.Columns([(choice_width, choice_list),
                                        ('weight', 1, viewer)],
                                        focus_column=1, dividechars=1)
-            frame.footer = urwid.Text('loaded {}'.format(thetitle))
+            frame.footer = urwid.AttrWrap(urwid.Text('loaded {}'.format(thetitle)), 'good')
         except:
             text = 'Could not read {}: {}'
-            frame.footer = urwid.Text(text).format(thetitle,
-                                                   sys.exc_info()[0])
+            frame.footer = urwid.AttrWrap(urwid.Text(text).format(thetitle,
+                                                   sys.exc_info()[0]), 'error')
 
     choice_text = []
     choice_path = []
@@ -152,7 +179,7 @@ def main():
     loop = urwid.MainLoop(frame, palette=palette, unhandled_input=handle_key)
     loop.run()
 
-
+header, viewer, panes, footer, frame = None, None, None, None, None
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

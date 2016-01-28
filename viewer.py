@@ -43,17 +43,18 @@ class WheelableListBox(urwid.ListBox):
         return super(WheelableListBox, self).mouse_event(
             size, event, button, col, row, focus)
 
-class SearchBox(urwid.Edit):
+
+class ActionEditBox(urwid.Edit):
     """A box which allows user to hit enter and a function will be called"""
     def __init__(self, callback, caption='search: '):
-        super(SearchBox, self).__init__(caption=caption)
+        super(ActionEditBox, self).__init__(caption=caption)
         self.callback = callback
 
     def keypress(self, size, key):
         if key == 'enter':
             self.callback(self._edit_text)
         else:
-            super(SearchBox, self).keypress(size, key) 
+            super(ActionEditBox, self).keypress(size, key) 
 
 
 def quit():
@@ -61,10 +62,30 @@ def quit():
     raise urwid.ExitMainLoop()
 
 
-def search(one):
+def intersperse(alist, item):
+    """Insert item between every element of alist"""
+    count = len(alist)
+    for index in range(1, count*2-1, 2):
+        alist.insert(index, item)
+    return alist
+    
+
+def search(term):
+    """Highlight matching portions of each line in content"""
     global frame
+    count = 0
     frame.set_focus('body')
-    frame.footer = urwid.Text('hello world: {}'.format(one))
+    contents = frame.body.contents[1][0].original_widget.original_widget.body
+    for index, text in enumerate(contents):
+        text, attr = text.get_text()
+        if term in text:
+            parts = intersperse(text.split(term), term)
+            count += len(parts) // 2
+            attrs = ('viewer', 'search') * ((len(parts)+1)//2)
+            newtext = zip(attrs, parts)
+            contents[index] = urwid.Text(newtext)
+
+    frame.footer = urwid.Text('{} matches found.'.format(count))
 
 
 def handle_key(key):
@@ -73,7 +94,7 @@ def handle_key(key):
     if key in ('q', 'Q', 'esc'):
         quit()
     elif key == '/':
-        box = SearchBox(search, caption='regex: ')
+        box = ActionEditBox(search, caption='regex: ')
         frame.footer = urwid.AttrWrap(box, 'search')
         frame.set_focus('footer')
 
@@ -93,7 +114,7 @@ def main():
     global  header, viewer, panes, footer, frame
     palette = [
         (None, 'light gray', 'black'),
-        ('viwer', 'black', 'light gray'),
+        ('viewer', 'black', 'light gray'),
         ('focus', 'white', 'black', 'standout'),
         ('header', 'yellow', 'black', 'standout'),
         ('footer', 'light gray', 'black'),
@@ -114,7 +135,7 @@ def main():
             lines = file_contents(user_data).split('\n')
             contents = [urwid.Text(x) for x in lines]
             viewer = urwid.AttrWrap(WheelableListBox(
-                urwid.SimpleListWalker(contents)), 'viwer')
+                urwid.SimpleListWalker(contents)), 'viewer')
             viewer = urwid.LineBox(viewer, title=thetitle)
             frame.body = urwid.Columns([(choice_width, choice_list),
                                        ('weight', 1, viewer)],
@@ -131,21 +152,23 @@ def main():
         args.files is None and
         args.title is None):
         # No arguments supplied, use current directory.
-        choice_text=[x for x in os.listdir('.') if os.path.isfile(x)]
-        choice_path=[x for x in os.listdir('.') if os.path.isfile(x)]
+        listing = sorted(os.listdir('.'))
+        choice_text = [x for x in listing if os.path.isfile(x)]
+        choice_path = choice_text
     elif args.directory:
         # User supplid a directory
         dir = args.directory
-        files = os.listdir(dir)
-        choice_text = [x for x in
-            files if os.path.isfile(os.path.join(dir, x))]
+        files = sorted(os.listdir(dir))
+        isfile = os.path.isfile
+        choice_text = [x for x in files if isfile(os.path.join(dir, x))]
         choice_path = [os.path.join(dir, x) for x in 
-            files if os.path.isfile(os.path.join(dir, x))]
+            files if isfile(os.path.join(dir, x))]
     elif args.files:
         # A list of files
+        files = sorted(args.files)
         choice_text = [os.path.basename(x) for x in
-            args.files if os.path.isfile(x)]
-        choice_path = [x for x in args.files if os.path.isfile(x)]
+            files if os.path.isfile(x)]
+        choice_path = [x for x in files if os.path.isfile(x)]
     elif args.title:
         # Pairs of titles and files
         choice_text = [x[0] for x in args.title]
@@ -167,7 +190,7 @@ def main():
     lines = file_contents(choice_path[0]).split('\n')
     contents = [urwid.Text(x) for x in lines]
     viewer = urwid.AttrWrap(WheelableListBox(urwid.SimpleListWalker(contents)),
-                            'viwer')
+                            'viewer')
     viewer = urwid.LineBox(viewer, title=choice_text[0])
 
     panes = urwid.Columns([(choice_width, choice_list), ('weight',1,viewer)],

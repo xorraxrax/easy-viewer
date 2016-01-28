@@ -1,3 +1,6 @@
+0.0.4
+Search highlights matching portions of each line, invoke with '/'
+
 0.0.3
 -----
 Added mouse wheel scrolling to both panes

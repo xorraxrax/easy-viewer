@@ -1,0 +1,5 @@
+- reset highlighting when searching for lines which do not contain term
+- remove '\r' from lines
+- convert '\t' to number of spaces until next tab stop  with a tabwidth of 4
+- regex instead of exact match
+

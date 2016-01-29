@@ -36,9 +36,9 @@ class WheelableListBox(urwid.ListBox):
         from urwid.util import is_mouse_press
         if is_mouse_press(event):
             if button == 5:
-                return super(WheelableListBox, self).keypress(size, 'down')
+                return self.keypress(size, 'down')
             elif button == 4:
-                return super(WheelableListBox, self).keypress(size, 'up')
+                return self.keypress(size, 'up')
 
         return super(WheelableListBox, self).mouse_event(
             size, event, button, col, row, focus)
@@ -46,7 +46,7 @@ class WheelableListBox(urwid.ListBox):
 
 class ActionEditBox(urwid.Edit):
     """A box which allows user to hit enter and a function will be called"""
-    def __init__(self, callback, caption='search: '):
+    def __init__(self, callback, caption=''):
         super(ActionEditBox, self).__init__(caption=caption)
         self.callback = callback
 
@@ -84,6 +84,8 @@ def search(term):
             attrs = ('viewer', 'search') * ((len(parts)+1)//2)
             newtext = zip(attrs, parts)
             contents[index] = urwid.Text(newtext)
+        else:
+            contents[index] = urwid.Text([('viewer', text)])
 
     frame.footer = urwid.Text('{} matches found.'.format(count))
 
@@ -176,6 +178,7 @@ def main():
     else:
         quit()
 
+    # Create buttons
     choices = []
     for index in range(len(choice_text)):
         choice = urwid.Button(
@@ -187,18 +190,16 @@ def main():
     choice_list = WheelableListBox(urwid.SimpleListWalker([header] + choices))
     choice_width = min(max(len(x) for x in choice_text)+4, 24)
 
-    lines = file_contents(choice_path[0]).split('\n')
-    contents = [urwid.Text(x) for x in lines]
-    viewer = urwid.AttrWrap(WheelableListBox(urwid.SimpleListWalker(contents)),
+    viewer = urwid.AttrWrap(WheelableListBox(urwid.SimpleListWalker([])),
                             'viewer')
-    viewer = urwid.LineBox(viewer, title=choice_text[0])
+    viewerr = urwid.LineBox(viewer, title=choice_text[0])
 
     panes = urwid.Columns([(choice_width, choice_list), ('weight',1,viewer)],
                           focus_column=1,dividechars=1)
     footer = urwid.AttrWrap(urwid.Text(''), 'footer')
     frame = urwid.Frame(panes, footer=footer)
     
-    
+    button_press(None, choice_path[0])
     loop = urwid.MainLoop(frame, palette=palette, unhandled_input=handle_key)
     loop.run()
 

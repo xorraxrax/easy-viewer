@@ -1,3 +1,9 @@
+0.0.5
+-----
+Search terms remain highlighted when switching files
+Expand tabs in output
+Remove \r from output
+
 0.0.4
 Search highlights matching portions of each line, invoke with '/'
 

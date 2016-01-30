@@ -70,9 +70,12 @@ def intersperse(alist, item):
     return alist
     
 
-def search(term):
+def search(term=''):
     """Highlight matching portions of each line in content"""
-    global frame
+    global frame, searchterm
+    searchterm = term
+    if not term:
+        return
     count = 0
     frame.set_focus('body')
     contents = frame.body.contents[1][0].original_widget.original_widget.body
@@ -88,6 +91,7 @@ def search(term):
             contents[index] = urwid.Text([('viewer', text)])
 
     frame.footer = urwid.Text('{} matches found.'.format(count))
+    return
 
 
 def handle_key(key):
@@ -113,7 +117,8 @@ def file_contents(filepath):
 
 
 def main():
-    global  header, viewer, panes, footer, frame
+    global  header, viewer, panes, footer, frame, searchterm
+    searchterm = ''
     palette = [
         (None, 'light gray', 'black'),
         ('viewer', 'black', 'light gray'),
@@ -129,12 +134,12 @@ def main():
     def button_press(button, user_data=None):
         """Action when another file is selected, display its content in
         viewer"""
-        global  viewer, panes, footer, frame
+        global  viewer, panes, footer, frame, term
         index = choice_path.index(user_data)
         thetitle = choice_text[index]
         frame.footer = urwid.Text('loading {}'.format(thetitle))
         try:
-            lines = file_contents(user_data).split('\n')
+            lines = file_contents(user_data).replace('\r', '').expandtabs().split('\n')
             contents = [urwid.Text(x) for x in lines]
             viewer = urwid.AttrWrap(WheelableListBox(
                 urwid.SimpleListWalker(contents)), 'viewer')
@@ -142,11 +147,12 @@ def main():
             frame.body = urwid.Columns([(choice_width, choice_list),
                                        ('weight', 1, viewer)],
                                        focus_column=1, dividechars=1)
+            search(searchterm)
             frame.footer = urwid.AttrWrap(urwid.Text('loaded {}'.format(thetitle)), 'good')
         except:
             text = 'Could not read {}: {}'
-            frame.footer = urwid.AttrWrap(urwid.Text(text).format(thetitle,
-                                                   sys.exc_info()[0]), 'error')
+            frame.footer = urwid.AttrWrap(urwid.Text(text.format(thetitle,
+                                                   sys.exc_info()[0])), 'error')
 
     choice_text = []
     choice_path = []
